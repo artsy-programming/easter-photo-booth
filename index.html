@@ -1,132 +1,340 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Easter Sticker Booth</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #fff5f8; margin: 0; padding: 20px; touch-action: manipulation; }
-        #canvas-container { 
-            position: relative; 
-            width: 90vw; 
-            height: 60vh; 
-            margin: 10px auto; 
-            border: 4px dashed #ffb7ce; 
-            background: #fff;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #user-photo { max-width: 100%; max-height: 100%; pointer-events: none; }
-        .sticker { 
-            position: absolute; 
-            cursor: move; 
-            width: 100px; 
-            touch-action: none;
-            user-select: none;
-            border: 1px solid transparent;
-        }
-        .active-sticker { border: 1px dashed #aaa; }
-        .controls { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
-        .sticker-options img { width: 60px; height: 60px; cursor: pointer; margin: 5px; padding: 5px; border-radius: 10px; background: #fff; border: 1px solid #eee; }
-        #size-slider { width: 200px; margin: 10px; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>🐰 Easter Photo Booth</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:#fdf0f5;background-image:radial-gradient(circle at 10% 20%,#ffd6e7 0%,transparent 40%),radial-gradient(circle at 90% 80%,#d6f0ff 0%,transparent 40%);min-height:100vh;padding:16px;touch-action:manipulation}
+h1{font-family:'Fredoka One',cursive;font-size:clamp(1.6rem,5vw,2.5rem);color:#e05b8a;text-align:center;letter-spacing:1px;margin-bottom:2px;text-shadow:3px 3px 0 #ffd6e7}
+.subtitle{text-align:center;color:#b07a9e;font-size:.88rem;margin-bottom:14px}
+.layout{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:700px;margin:0 auto}
+#cc{position:relative;width:min(92vw,600px);height:min(62vw,420px);border:3px dashed #f4a8c7;border-radius:20px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(224,91,138,.12)}
+#ph{display:flex;flex-direction:column;align-items:center;gap:8px;color:#d4a0bb;pointer-events:none}
+#ph .ico{font-size:2.6rem}
+#ph p{font-size:.82rem;font-weight:700}
+#bp{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;display:none}
+.sticker{position:absolute;cursor:grab;touch-action:none;user-select:none;border:2px solid transparent;border-radius:4px}
+.sticker:active{cursor:grabbing}
+.sticker.sel{border-color:#e05b8a;box-shadow:0 0 0 2px rgba(224,91,138,.3)}
+.panel{background:#fff;border-radius:20px;padding:12px 16px;box-shadow:0 4px 20px rgba(0,0,0,.08);width:min(92vw,600px)}
+.row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ubtn{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#f77eb8,#e05b8a);color:#fff;border:none;border-radius:50px;padding:8px 15px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:0 4px 12px rgba(224,91,138,.35);transition:transform .15s}
+.ubtn:hover{transform:translateY(-1px)}
+#fi{display:none}
+.sg{display:flex;align-items:center;gap:6px;flex:1;min-width:130px}
+.sg label{font-size:.75rem;color:#b07a9e;font-weight:700;white-space:nowrap}
+input[type=range]{flex:1;accent-color:#e05b8a}
+.abtn{display:inline-flex;align-items:center;gap:4px;border:none;border-radius:50px;padding:7px 13px;font-family:'Nunito',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;transition:transform .15s,opacity .15s}
+.dbtn{background:#ffe0ec;color:#e05b8a}
+.sbtn{background:linear-gradient(135deg,#7ed9a8,#3cb874);color:#fff;box-shadow:0 4px 12px rgba(60,184,116,.3)}
+.abtn:hover{transform:translateY(-1px)}
+.abtn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.tray{background:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 4px 20px rgba(0,0,0,.08);width:min(92vw,600px)}
+.tsec{margin-bottom:10px}
+.tsec:last-child{margin-bottom:0}
+.tlbl{font-size:.7rem;font-weight:700;color:#b07a9e;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+.sgrid{display:flex;flex-wrap:wrap;gap:7px}
+.sthumb{width:54px;height:54px;padding:4px;border-radius:12px;background:#fdf0f5;border:2px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s;object-fit:contain}
+.sthumb:hover{transform:scale(1.18);border-color:#f4a8c7;background:#ffe0ec}
+.hint{font-size:.72rem;color:#c9a0bb;text-align:center}
+</style>
 </head>
 <body>
+<div class="layout">
+  <h1>🐰 Easter Photo Booth</h1>
+  <p class="subtitle">Add stickers · Resize · Save your pic!</p>
 
-    <h2>Easter Photo Booth 🐰</h2>
-    
-    <div class="controls">
-        <input type="file" id="upload" accept="image/*" style="margin-bottom: 10px;"><br>
-        <label>Sticker Size: </label>
-        <input type="range" id="size-slider" min="20" max="400" value="100">
+  <div id="cc">
+    <div id="ph"><div class="ico">📷</div><p>Upload a photo to start!</p></div>
+    <img id="bp" alt=""/>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <button class="ubtn" onclick="document.getElementById('fi').click()">📂 Upload Photo</button>
+      <input type="file" id="fi" accept="image/*"/>
+      <div class="sg"><label>🔭 Size</label><input type="range" id="sz" min="20" max="380" value="110"/></div>
+      <button class="abtn dbtn" id="delbtn" disabled onclick="deleteSel()">🗑 Delete</button>
+      <button class="abtn sbtn" onclick="saveImg()">💾 Save</button>
     </div>
-    
-    <div id="canvas-container">
-        <p style="color: #ccc;">Upload a photo to start!</p>
+  </div>
+
+  <div class="tray">
+    <div class="tsec">
+      <div class="tlbl">🐰 Bunny Ears</div>
+      <div class="sgrid" id="ears"></div>
     </div>
-
-    <div class="sticker-options">
-        <img src="https://img.icons8.com/color/96/rabbit-ears.png" onclick="addSticker(this.src)">
-        <img src="https://img.icons8.com/color/96/easter-egg.png" onclick="addSticker(this.src)">
-        <img src="https://img.icons8.com/color/96/chick.png" onclick="addSticker(this.src)">
-        <img src="https://img.icons8.com/color/96/daffodil.png" onclick="addSticker(this.src)">
-        <img src="https://img.icons8.com/color/96/easter-basket.png" onclick="addSticker(this.src)">
+    <div class="tsec">
+      <div class="tlbl">🥚 Easter Eggs</div>
+      <div class="sgrid" id="eggs"></div>
     </div>
+    <div class="tsec">
+      <div class="tlbl">🌸 More</div>
+      <div class="sgrid" id="misc"></div>
+    </div>
+  </div>
 
-    <script>
-        const container = document.getElementById('canvas-container');
-        const upload = document.getElementById('upload');
-        const sizeSlider = document.getElementById('size-slider');
-        let selectedSticker = null;
+  <p class="hint">Tap sticker to add · Drag to move · Slider resizes selected · Delete key removes</p>
+</div>
 
-        // Handle Image Upload
-        upload.addEventListener('change', function(e) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                container.innerHTML = `<img src="${event.target.result}" id="user-photo">`;
-            }
-            reader.readAsDataURL(e.target.files[0]);
-        });
+<script>
+const E = s => encodeURIComponent(s.replace(/\s+/g,' ').trim());
+const U = s => 'data:image/svg+xml,' + E(s);
 
-        // Add Sticker Logic
-        function addSticker(src) {
-            const img = document.createElement('img');
-            img.src = src;
-            img.className = 'sticker';
-            img.style.left = '50px';
-            img.style.top = '50px';
-            
-            let xOffset = 0, yOffset = 0;
+// ── BUNNY EARS ───────────────────────────────────────────────────────────────
+function ears(outer, inner, stroke) {
+  return U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130">
+    <ellipse cx="34" cy="58" rx="20" ry="57" fill="${outer}" stroke="${stroke}" stroke-width="2.5" transform="rotate(-15 34 118)"/>
+    <ellipse cx="34" cy="62" rx="11" ry="39" fill="${inner}" transform="rotate(-15 34 118)"/>
+    <ellipse cx="86" cy="58" rx="20" ry="57" fill="${outer}" stroke="${stroke}" stroke-width="2.5" transform="rotate(15 86 118)"/>
+    <ellipse cx="86" cy="62" rx="11" ry="39" fill="${inner}" transform="rotate(15 86 118)"/>
+  </svg>`);
+}
 
-            const onStart = (e) => {
-                selectSticker(img);
-                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-                xOffset = clientX - img.offsetLeft;
-                yOffset = clientY - img.offsetTop;
-            };
+// ── EASTER EGGS ──────────────────────────────────────────────────────────────
+function egg(bg, stripes) {
+  const bands = stripes.map((c,i) => {
+    const y = 28 + i * 22;
+    return `<rect x="4" y="${y}" width="92" height="18" fill="${c}" clip-path="url(#ec)"/>`;
+  }).join('');
+  return U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 122">
+    <defs><clipPath id="ec"><ellipse cx="50" cy="65" rx="44" ry="54"/></clipPath></defs>
+    <ellipse cx="50" cy="65" rx="44" ry="54" fill="${bg}"/>
+    ${bands}
+    <ellipse cx="50" cy="65" rx="44" ry="54" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="2"/>
+  </svg>`);
+}
 
-            const onMove = (e) => {
-                if (selectedSticker === img) {
-                    e.preventDefault();
-                    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-                    img.style.left = (clientX - xOffset) + 'px';
-                    img.style.top = (clientY - yOffset) + 'px';
-                }
-            };
+function polkaDotEgg(bg, dotColor) {
+  const dots = [];
+  [[22,30],[55,22],[80,38],[15,58],[45,50],[78,62],[28,78],[60,82],[85,72],[42,95],[70,98]].forEach(([x,y]) => {
+    dots.push(`<circle cx="${x}" cy="${y}" r="7" fill="${dotColor}" clip-path="url(#ep)"/>`);
+  });
+  return U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 122">
+    <defs><clipPath id="ep"><ellipse cx="50" cy="65" rx="44" ry="54"/></clipPath></defs>
+    <ellipse cx="50" cy="65" rx="44" ry="54" fill="${bg}"/>
+    ${dots.join('')}
+    <ellipse cx="50" cy="65" rx="44" ry="54" fill="none" stroke="rgba(0,0,0,.1)" stroke-width="2"/>
+  </svg>`);
+}
 
-            img.addEventListener('mousedown', onStart);
-            img.addEventListener('touchstart', onStart, {passive: false});
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('touchmove', onMove, {passive: false});
-            
-            container.appendChild(img);
-            selectSticker(img);
-        }
+// ── CHICK ────────────────────────────────────────────────────────────────────
+const chick = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110">
+  <ellipse cx="50" cy="75" rx="34" ry="28" fill="#fde047"/>
+  <circle cx="50" cy="46" r="28" fill="#fde047"/>
+  <ellipse cx="22" cy="72" rx="13" ry="9" fill="#fbbf24" transform="rotate(-25 22 72)"/>
+  <ellipse cx="78" cy="72" rx="13" ry="9" fill="#fbbf24" transform="rotate(25 78 72)"/>
+  <circle cx="41" cy="43" r="5" fill="white"/>
+  <circle cx="59" cy="43" r="5" fill="white"/>
+  <circle cx="42" cy="44" r="3" fill="#1a1a1a"/>
+  <circle cx="60" cy="44" r="3" fill="#1a1a1a"/>
+  <circle cx="43" cy="43" r="1" fill="white"/>
+  <circle cx="61" cy="43" r="1" fill="white"/>
+  <polygon points="43,53 57,53 50,62" fill="#f97316"/>
+  <ellipse cx="50" cy="96" rx="7" ry="5" fill="#f97316"/>
+  <ellipse cx="40" cy="101" rx="9" ry="5" fill="#f97316"/>
+  <ellipse cx="60" cy="101" rx="9" ry="5" fill="#f97316"/>
+</svg>`);
 
-        function selectSticker(el) {
-            if (selectedSticker) selectedSticker.classList.remove('active-sticker');
-            selectedSticker = el;
-            selectedSticker.classList.add('active-sticker');
-            sizeSlider.value = parseInt(selectedSticker.style.width) || 100;
-        }
+// ── TULIP ────────────────────────────────────────────────────────────────────
+const tulip = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130">
+  <path d="M50 92 C50 92 50 42 50 30" stroke="#22c55e" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M50 68 C50 68 32 54 27 40" stroke="#22c55e" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <ellipse cx="36" cy="57" rx="15" ry="9" fill="#4ade80" transform="rotate(-30 36 57)"/>
+  <path d="M36 32 C34 12 50 6 50 20 C50 6 66 12 64 32 C62 44 56 52 50 54 C44 52 38 44 36 32Z" fill="#f472b6"/>
+  <path d="M42 28 C41 15 50 11 50 20 C50 11 59 15 58 28 C56 38 54 48 50 52 C46 48 44 38 42 28Z" fill="#fda4af"/>
+</svg>`);
 
-        sizeSlider.addEventListener('input', () => {
-            if (selectedSticker) {
-                selectedSticker.style.width = sizeSlider.value + 'px';
-            }
-        });
+// ── DAISY ────────────────────────────────────────────────────────────────────
+const daisy = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  ${Array.from({length:10},(_,i)=>{const a=i*36*Math.PI/180,x=(50+30*Math.sin(a)).toFixed(1),y=(50-30*Math.cos(a)).toFixed(1);return `<ellipse cx="${x}" cy="${y}" rx="8" ry="15" fill="white" stroke="#e2e8f0" stroke-width="1" transform="rotate(${i*36} ${x} ${y})"/>`;}).join('')}
+  <circle cx="50" cy="50" r="15" fill="#fde047"/>
+  <circle cx="50" cy="50" r="10" fill="#f59e0b"/>
+</svg>`);
 
-        // Click background to deselect
-        container.addEventListener('click', (e) => {
-            if (e.target === container || e.target.id === 'user-photo') {
-                if (selectedSticker) selectedSticker.classList.remove('active-sticker');
-                selectedSticker = null;
-            }
-        });
-    </script>
+// ── BUTTERFLY ────────────────────────────────────────────────────────────────
+const butterfly = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100">
+  <ellipse cx="34" cy="36" rx="28" ry="20" fill="#c084fc" opacity=".9" transform="rotate(-20 34 36)"/>
+  <ellipse cx="86" cy="36" rx="28" ry="20" fill="#c084fc" opacity=".9" transform="rotate(20 86 36)"/>
+  <ellipse cx="30" cy="64" rx="19" ry="13" fill="#e879f9" transform="rotate(15 30 64)"/>
+  <ellipse cx="90" cy="64" rx="19" ry="13" fill="#e879f9" transform="rotate(-15 90 64)"/>
+  <ellipse cx="34" cy="36" rx="16" ry="10" fill="#f0abfc" opacity=".55" transform="rotate(-20 34 36)"/>
+  <ellipse cx="86" cy="36" rx="16" ry="10" fill="#f0abfc" opacity=".55" transform="rotate(20 86 36)"/>
+  <ellipse cx="60" cy="32" rx="5" ry="14" fill="#581c87"/>
+  <ellipse cx="60" cy="56" rx="4" ry="12" fill="#581c87"/>
+  <path d="M60 28 C55 16 44 12 41 14" stroke="#581c87" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M60 28 C65 16 76 12 79 14" stroke="#581c87" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>`);
+
+// ── RAINBOW ──────────────────────────────────────────────────────────────────
+const rainbow = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 88">
+  <path d="M8 82 C8 36 132 36 132 82" fill="none" stroke="#ff4444" stroke-width="9" stroke-linecap="round"/>
+  <path d="M17 82 C17 45 123 45 123 82" fill="none" stroke="#ff9900" stroke-width="9" stroke-linecap="round"/>
+  <path d="M26 82 C26 54 114 54 114 82" fill="none" stroke="#ffe033" stroke-width="9" stroke-linecap="round"/>
+  <path d="M35 82 C35 63 105 63 105 82" fill="none" stroke="#44cc44" stroke-width="9" stroke-linecap="round"/>
+  <path d="M44 82 C44 72 96 72 96 82" fill="none" stroke="#4488ff" stroke-width="9" stroke-linecap="round"/>
+  <ellipse cx="14" cy="76" rx="13" ry="10" fill="white"/>
+  <ellipse cx="126" cy="76" rx="13" ry="10" fill="white"/>
+</svg>`);
+
+// ── SPARKLE ──────────────────────────────────────────────────────────────────
+const sparkle = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <path d="M50 8 C51 28 52 38 50 50 C48 38 49 28 50 8Z" fill="#fde047"/>
+  <path d="M92 50 C72 49 62 48 50 50 C62 52 72 51 92 50Z" fill="#fde047"/>
+  <path d="M50 92 C49 72 48 62 50 50 C52 62 51 72 50 92Z" fill="#fde047"/>
+  <path d="M8 50 C28 51 38 52 50 50 C38 48 28 49 8 50Z" fill="#fde047"/>
+  <path d="M79 21 C64 36 58 42 50 50 C56 40 66 30 79 21Z" fill="#fbcfe8"/>
+  <path d="M79 79 C64 64 58 58 50 50 C60 56 70 66 79 79Z" fill="#fbcfe8"/>
+  <path d="M21 79 C36 64 42 58 50 50 C44 60 34 70 21 79Z" fill="#fbcfe8"/>
+  <path d="M21 21 C36 36 42 42 50 50 C40 44 30 34 21 21Z" fill="#fbcfe8"/>
+  <circle cx="50" cy="50" r="7" fill="white" stroke="#fde047" stroke-width="2"/>
+</svg>`);
+
+// ── CARROT ───────────────────────────────────────────────────────────────────
+const carrot = U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 130">
+  <path d="M40 18 C52 20 62 42 60 72 C58 96 48 118 40 120 C32 118 22 96 20 72 C18 42 28 20 40 18Z" fill="#f97316"/>
+  <path d="M40 18 C46 20 54 42 54 72 C54 92 48 114 40 120 C37 110 36 86 38 62 C39 44 39 30 40 18Z" fill="#fb923c"/>
+  <path d="M40 20 C38 4 28 0 26 2 C25 10 33 16 40 20Z" fill="#4ade80"/>
+  <path d="M40 20 C42 4 52 0 54 2 C55 10 47 16 40 20Z" fill="#4ade80"/>
+  <path d="M40 20 C40 6 38 -1 40 -1 C42 -1 40 6 40 20Z" fill="#22c55e"/>
+</svg>`);
+
+// ── CATALOG ──────────────────────────────────────────────────────────────────
+const EARS = [
+  {l:'White',    s: ears('white',   '#ffc0d4', '#ccc')},
+  {l:'Pink',     s: ears('#ff85b3', '#ffe0ec', '#e05b8a')},
+  {l:'Black',    s: ears('#2d2d2d', '#ff85b3', '#111')},
+  {l:'Brown',    s: ears('#c8864a', '#ffcba4', '#8b5e34')},
+  {l:'Lavender', s: ears('#c5a3ff', '#f0e6ff', '#9b72e8')},
+  {l:'Gray',     s: ears('#b0b0b0', '#ffc0d4', '#888')},
+];
+
+const EGGS = [
+  {l:'Sunny',   s: egg('#ffe066', ['#ff85b3','#85c4ff','#7ed9a8'])},
+  {l:'Pastel',  s: egg('#c5a3ff', ['#ffd6e7','#d6f0ff','#ffd6e7'])},
+  {l:'Teal',    s: egg('#5eead4', ['#fde047','#f472b6','#fde047'])},
+  {l:'Classic', s: egg('#ff85b3', ['#ffe066','#fff','#ffe066'])},
+  {l:'Polka 1', s: polkaDotEgg('#fde047','#f472b6')},
+  {l:'Polka 2', s: polkaDotEgg('#85c4ff','#fff')},
+];
+
+const MISC = [
+  {l:'Chick',      s: chick},
+  {l:'Tulip',      s: tulip},
+  {l:'Daisy',      s: daisy},
+  {l:'Butterfly',  s: butterfly},
+  {l:'Rainbow',    s: rainbow},
+  {l:'Sparkle',    s: sparkle},
+  {l:'Carrot',     s: carrot},
+];
+
+function buildTray(items, id) {
+  const el = document.getElementById(id);
+  items.forEach(({l, s}) => {
+    const img = document.createElement('img');
+    img.src = s; img.title = l; img.className = 'sthumb';
+    img.addEventListener('click', () => addSticker(s));
+    el.appendChild(img);
+  });
+}
+buildTray(EARS, 'ears');
+buildTray(EGGS, 'eggs');
+buildTray(MISC, 'misc');
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const cc = document.getElementById('cc');
+const bp = document.getElementById('bp');
+const ph = document.getElementById('ph');
+const sz = document.getElementById('sz');
+const delbtn = document.getElementById('delbtn');
+let sel = null;
+
+document.getElementById('fi').addEventListener('change', function(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => { bp.src = ev.target.result; bp.style.display='block'; ph.style.display='none'; };
+  r.readAsDataURL(f);
+});
+
+function addSticker(src) {
+  const el = document.createElement('img');
+  el.src = src; el.className = 'sticker';
+  const w = parseInt(sz.value);
+  el.style.width = w+'px';
+  el.style.left = Math.max(0,(cc.clientWidth/2)-w/2)+'px';
+  el.style.top  = Math.max(0,(cc.clientHeight/2)-w/2)+'px';
+  makeDraggable(el);
+  cc.appendChild(el);
+  pick(el);
+}
+
+function makeDraggable(el) {
+  let sx,sy,sl,st;
+  function start(e) {
+    e.stopPropagation(); pick(el);
+    const t = e.touches?e.touches[0]:e;
+    const r = cc.getBoundingClientRect();
+    sx=t.clientX-r.left; sy=t.clientY-r.top;
+    sl=parseInt(el.style.left)||0; st=parseInt(el.style.top)||0;
+  }
+  function move(e) {
+    if (sel!==el) return; e.preventDefault();
+    const t = e.touches?e.touches[0]:e;
+    const r = cc.getBoundingClientRect();
+    const dx=(t.clientX-r.left)-sx, dy=(t.clientY-r.top)-sy;
+    el.style.left=Math.min(cc.clientWidth-el.offsetWidth,  Math.max(0,sl+dx))+'px';
+    el.style.top =Math.min(cc.clientHeight-el.offsetHeight,Math.max(0,st+dy))+'px';
+  }
+  el.addEventListener('mousedown',  start);
+  el.addEventListener('touchstart', start, {passive:false});
+  document.addEventListener('mousemove', move);
+  document.addEventListener('touchmove', move, {passive:false});
+}
+
+function pick(el) {
+  if (sel) sel.classList.remove('sel');
+  sel=el; el.classList.add('sel');
+  sz.value = parseInt(el.style.width)||110;
+  delbtn.disabled=false;
+}
+function deselect() {
+  if (sel) { sel.classList.remove('sel'); sel=null; }
+  delbtn.disabled=true;
+}
+cc.addEventListener('click', e => { if(e.target===cc||e.target===bp||e.target===ph) deselect(); });
+sz.addEventListener('input', () => { if(sel) sel.style.width=sz.value+'px'; });
+
+function deleteSel() { if(sel){sel.remove();sel=null;delbtn.disabled=true;} }
+document.addEventListener('keydown', e => {
+  if((e.key==='Delete'||e.key==='Backspace')&&sel&&document.activeElement.tagName!=='INPUT') deleteSel();
+});
+
+async function saveImg() {
+  deselect();
+  const cw=cc.clientWidth, ch=cc.clientHeight;
+  const canvas=document.createElement('canvas');
+  canvas.width=cw*2; canvas.height=ch*2;
+  const ctx=canvas.getContext('2d');
+  ctx.scale(2,2);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cw,ch);
+  if(bp.style.display!=='none'&&bp.src) {
+    const iw=bp.naturalWidth,ih=bp.naturalHeight;
+    const sc=Math.min(cw/iw,ch/ih);
+    const dw=iw*sc,dh=ih*sc;
+    ctx.drawImage(bp,(cw-dw)/2,(ch-dh)/2,dw,dh);
+  }
+  await Promise.all(Array.from(cc.querySelectorAll('.sticker')).map(s=>new Promise(res=>{
+    const tmp=new Image();
+    tmp.onload=()=>{ ctx.drawImage(tmp,parseInt(s.style.left)||0,parseInt(s.style.top)||0,parseInt(s.style.width)||110,parseInt(s.style.width)||110); res(); };
+    tmp.onerror=()=>res();
+    tmp.src=s.src;
+  })));
+  const a=document.createElement('a');
+  a.download='easter-photo.png'; a.href=canvas.toDataURL('image/png'); a.click();
+}
+</script>
 </body>
 </html>
