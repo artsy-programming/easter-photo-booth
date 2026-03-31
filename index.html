@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Easter Sticker Booth</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #fff5f8; margin: 0; padding: 20px; touch-action: manipulation; }
+        #canvas-container { 
+            position: relative; 
+            width: 90vw; 
+            height: 60vh; 
+            margin: 10px auto; 
+            border: 4px dashed #ffb7ce; 
+            background: #fff;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #user-photo { max-width: 100%; max-height: 100%; pointer-events: none; }
+        .sticker { 
+            position: absolute; 
+            cursor: move; 
+            width: 100px; 
+            touch-action: none;
+            user-select: none;
+            border: 1px solid transparent;
+        }
+        .active-sticker { border: 1px dashed #aaa; }
+        .controls { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
+        .sticker-options img { width: 60px; height: 60px; cursor: pointer; margin: 5px; padding: 5px; border-radius: 10px; background: #fff; border: 1px solid #eee; }
+        #size-slider { width: 200px; margin: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>Easter Photo Booth 🐰</h2>
+    
+    <div class="controls">
+        <input type="file" id="upload" accept="image/*" style="margin-bottom: 10px;"><br>
+        <label>Sticker Size: </label>
+        <input type="range" id="size-slider" min="20" max="400" value="100">
+    </div>
+    
+    <div id="canvas-container">
+        <p style="color: #ccc;">Upload a photo to start!</p>
+    </div>
+
+    <div class="sticker-options">
+        <img src="https://img.icons8.com/color/96/rabbit-ears.png" onclick="addSticker(this.src)">
+        <img src="https://img.icons8.com/color/96/easter-egg.png" onclick="addSticker(this.src)">
+        <img src="https://img.icons8.com/color/96/chick.png" onclick="addSticker(this.src)">
+        <img src="https://img.icons8.com/color/96/daffodil.png" onclick="addSticker(this.src)">
+        <img src="https://img.icons8.com/color/96/easter-basket.png" onclick="addSticker(this.src)">
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const upload = document.getElementById('upload');
+        const sizeSlider = document.getElementById('size-slider');
+        let selectedSticker = null;
+
+        // Handle Image Upload
+        upload.addEventListener('change', function(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                container.innerHTML = `<img src="${event.target.result}" id="user-photo">`;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        });
+
+        // Add Sticker Logic
+        function addSticker(src) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.className = 'sticker';
+            img.style.left = '50px';
+            img.style.top = '50px';
+            
+            let xOffset = 0, yOffset = 0;
+
+            const onStart = (e) => {
+                selectSticker(img);
+                const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+                const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+                xOffset = clientX - img.offsetLeft;
+                yOffset = clientY - img.offsetTop;
+            };
+
+            const onMove = (e) => {
+                if (selectedSticker === img) {
+                    e.preventDefault();
+                    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+                    img.style.left = (clientX - xOffset) + 'px';
+                    img.style.top = (clientY - yOffset) + 'px';
+                }
+            };
+
+            img.addEventListener('mousedown', onStart);
+            img.addEventListener('touchstart', onStart, {passive: false});
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('touchmove', onMove, {passive: false});
+            
+            container.appendChild(img);
+            selectSticker(img);
+        }
+
+        function selectSticker(el) {
+            if (selectedSticker) selectedSticker.classList.remove('active-sticker');
+            selectedSticker = el;
+            selectedSticker.classList.add('active-sticker');
+            sizeSlider.value = parseInt(selectedSticker.style.width) || 100;
+        }
+
+        sizeSlider.addEventListener('input', () => {
+            if (selectedSticker) {
+                selectedSticker.style.width = sizeSlider.value + 'px';
+            }
+        });
+
+        // Click background to deselect
+        container.addEventListener('click', (e) => {
+            if (e.target === container || e.target.id === 'user-photo') {
+                if (selectedSticker) selectedSticker.classList.remove('active-sticker');
+                selectedSticker = null;
+            }
+        });
+    </script>
+</body>
+</html>
