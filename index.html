@@ -56,7 +56,8 @@ input[type=range]{flex:1;accent-color:#e05b8a}
     <div class="row">
       <button class="ubtn" onclick="document.getElementById('fi').click()">📂 Upload Photo</button>
       <input type="file" id="fi" accept="image/*"/>
-      <div class="sg"><label>🔭 Size</label><input type="range" id="sz" min="20" max="380" value="110"/></div>
+      <div class="sg"><label>🔭 Sticker</label><input type="range" id="sz" min="20" max="380" value="110"/></div>
+      <div class="sg"><label>🖼 Photo</label><input type="range" id="pz" min="50" max="300" value="100"/></div>
       <button class="abtn dbtn" id="delbtn" disabled onclick="deleteSel()">🗑 Delete</button>
       <button class="abtn sbtn" onclick="saveImg()">💾 Save</button>
     </div>
@@ -86,7 +87,7 @@ const U = s => 'data:image/svg+xml,' + E(s);
 
 // ── BUNNY EARS ───────────────────────────────────────────────────────────────
 function ears(outer, inner, stroke) {
-  return U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130">
+  return U(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -8 148 145">
     <ellipse cx="34" cy="58" rx="20" ry="57" fill="${outer}" stroke="${stroke}" stroke-width="2.5" transform="rotate(-15 34 118)"/>
     <ellipse cx="34" cy="62" rx="11" ry="39" fill="${inner}" transform="rotate(-15 34 118)"/>
     <ellipse cx="86" cy="58" rx="20" ry="57" fill="${outer}" stroke="${stroke}" stroke-width="2.5" transform="rotate(15 86 118)"/>
@@ -252,6 +253,12 @@ const sz = document.getElementById('sz');
 const delbtn = document.getElementById('delbtn');
 let sel = null;
 
+document.getElementById('pz').addEventListener('input', function() {
+  const scale = this.value / 100;
+  bp.style.transform = `scale(${scale})`;
+  bp.style.transformOrigin = 'center center';
+});
+
 document.getElementById('fi').addEventListener('change', function(e) {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
@@ -272,26 +279,30 @@ function addSticker(src) {
 }
 
 function makeDraggable(el) {
-  let sx,sy,sl,st;
+  let sx,sy,sl,st,dragging=false;
   function start(e) {
     e.stopPropagation(); pick(el);
     const t = e.touches?e.touches[0]:e;
     const r = cc.getBoundingClientRect();
     sx=t.clientX-r.left; sy=t.clientY-r.top;
     sl=parseInt(el.style.left)||0; st=parseInt(el.style.top)||0;
+    dragging=true;
   }
   function move(e) {
-    if (sel!==el) return; e.preventDefault();
+    if (!dragging) return; e.preventDefault();
     const t = e.touches?e.touches[0]:e;
     const r = cc.getBoundingClientRect();
     const dx=(t.clientX-r.left)-sx, dy=(t.clientY-r.top)-sy;
     el.style.left=Math.min(cc.clientWidth-el.offsetWidth,  Math.max(0,sl+dx))+'px';
     el.style.top =Math.min(cc.clientHeight-el.offsetHeight,Math.max(0,st+dy))+'px';
   }
+  function stop() { dragging=false; }
   el.addEventListener('mousedown',  start);
   el.addEventListener('touchstart', start, {passive:false});
   document.addEventListener('mousemove', move);
   document.addEventListener('touchmove', move, {passive:false});
+  document.addEventListener('mouseup',  stop);
+  document.addEventListener('touchend', stop);
 }
 
 function pick(el) {
@@ -323,7 +334,8 @@ async function saveImg() {
   if(bp.style.display!=='none'&&bp.src) {
     const iw=bp.naturalWidth,ih=bp.naturalHeight;
     const sc=Math.min(cw/iw,ch/ih);
-    const dw=iw*sc,dh=ih*sc;
+    const zoom=parseFloat(document.getElementById('pz').value)/100;
+    const dw=iw*sc*zoom,dh=ih*sc*zoom;
     ctx.drawImage(bp,(cw-dw)/2,(ch-dh)/2,dw,dh);
   }
   await Promise.all(Array.from(cc.querySelectorAll('.sticker')).map(s=>new Promise(res=>{
